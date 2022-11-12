@@ -1,0 +1,19 @@
+{
+  "Funtional Component without interface ": {
+    "prefix": "wrfc",
+    "body": [
+      "import React from 'react';",
+      "",
+      "const ${1:ComponentName}: React.FC = () => {",
+      "\treturn( ",
+      "\t\t<React.Fragment>",
+      "\t\t\t${2:<h1>Hello world</h1>}",
+      "\t\t</React.Fragment>",
+      "\t);",
+      "};",
+      "",
+      "export default ${1:ComponentName};"
+    ],
+    "description": "Create a basic react FC"
+  }
+}
