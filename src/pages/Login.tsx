@@ -29,10 +29,10 @@ const Login: React.FC = () => {
 
   const [isButtonDisabled, setIsButtonDisabled] = useState<boolean>(true);
   const [email, setEmail] = useState<string>("");
-  const [password, setPassword] = useState<any>();
+  const [password, setPassword] = useState<string>("");
 
   useEffect(() => {
-    if (email.length > 0) {
+    if (email.length > 0 && password.length > 0) {
       setIsButtonDisabled(false);
     } else {
       setIsButtonDisabled(true);
@@ -66,6 +66,7 @@ const Login: React.FC = () => {
               />
             </Box>
             <TextField
+              autoFocus
               margin="normal"
               type={"email"}
               id="email"
@@ -82,7 +83,7 @@ const Login: React.FC = () => {
               label="Password"
               variant="outlined"
               value={password}
-              onChange={(ev: any) => setPassword(ev.target.any)}
+              onChange={(ev: any) => setPassword(ev.target.value)}
               fullWidth
             />
             <FormGroup>
