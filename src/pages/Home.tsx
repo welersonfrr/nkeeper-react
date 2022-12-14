@@ -10,62 +10,151 @@ import Avatar from "@mui/material/Avatar";
 import Tooltip from "@mui/material/Tooltip";
 import MenuItem from "@mui/material/MenuItem";
 import iconLogo from "../images/icon-light-filled.png";
-import { Button, Grid, InputBase } from "@mui/material";
+import {
+  Alert,
+  Button,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Grid,
+  InputBase,
+  Snackbar,
+  TextField,
+} from "@mui/material";
 import { useState, useEffect } from "react";
 import ColorLensIcon from "@mui/icons-material/ColorLens";
 import Note from "../components/note/Note";
+import { useNavigate } from "react-router-dom";
+import { useAppDispatch } from "../store/hooks";
+import { logout } from "../store/modules/LoginSlice";
+import NoteType from "../Types/NoteType";
 
 const ResponsiveAppBar: React.FC = () => {
-  const titulo = "Lorem Ipsum";
-  const corpo =
-    " Lorem ipsum dolor sit, amet consectetur adipisicing elit. Aliquam eos, exercitationem illum molestias consequuntur neque maxime ipsum quas at officiis amet. Modi enim tempore aliquam magni molestias dolore qui tenetur. ";
+  const navigate = useNavigate();
+  const dispach = useAppDispatch();
+  const loginLocal = JSON.parse(localStorage.getItem("logged")!);
+  const user = loginLocal.user;
+  const colors = ["#fff", "#e91e63", "#4caf50", "#2196f3"];
 
-  // standart true but changed to false
   const [noteDetailsHidden, setNoteDetailsHidden] = useState<boolean>(true);
   const [saveNoteHidden, setSaveNoteHidden] = useState<boolean>(true);
-
+  const [openDeleteDialog, setOpenDeleteDialog] = React.useState(false);
+  const [openEditDialog, setOpenEditDialog] = React.useState(false);
+  const [selectedNote, setSelectedNote] = React.useState<number>(0);
   const [noteColor, setNoteColor] = useState<string>("#fff");
   const [noteTitle, setNoteTitle] = useState<string>("");
   const [noteBody, setNoteBody] = useState<string>("");
+  const [newTitle, setNewTitle] = useState<string>("");
+  const [newBody, setNewBody] = useState<string>("");
+  const [dataUser, setDataUser] = useState<any>(
+    JSON.parse(localStorage.getItem(user)!)
+  );
+  const [openSnackSalvar, setOpenSnackSalvar] = React.useState(false);
+  const [openSnackEditar, setOpenSnackEditar] = React.useState(false);
+  const [openSnackEditarErro, setOpenSnackEditarErro] = React.useState(false);
+  const [openSnackExcluir, setOpenSnackExcluir] = React.useState(false);
 
+  // CHECAR SE EXISTE USUARIO LOGADO
+  if (loginLocal === null) {
+    navigate("/login");
+  }
+
+  // CONTROLE DO LOGOUT
+  const handleLogout = () => {
+    localStorage.removeItem("logged");
+    dispach(logout);
+    navigate("/login");
+  };
+
+  // FUNCAO AUXILIAR PARA RESETAR OS VALORES DOS INPUTS
+  const resetFields = () => {
+    hideDetails();
+    setNoteBody("");
+    setNoteTitle("");
+    setNewBody("");
+    setNewTitle("");
+    setNoteColor("#fff");
+  };
+
+  // FUNCOES PARA MOSTRAR OS BOTOTES DE AÇAO DA NOTA
   const showNoteDetails = (noteDetail: string) => {
     setNoteDetailsHidden(false);
     setNoteBody(noteDetail);
   };
-
   const hideDetails = () => {
     setNoteDetailsHidden(true);
   };
 
-  const settings = ["Logout"];
-  const colors = ["#fff", "#e91e63", "#4caf50", "#2196f3"];
-
-  const [anchorElNav, setAnchorElNav] = React.useState<null | HTMLElement>(
-    null
-  );
-
+  // CONTROLE DA APP BAR
   const [anchorElUser, setAnchorElUser] = React.useState<null | HTMLElement>(
     null
   );
-
   const handleOpenUserMenu = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorElUser(event.currentTarget);
   };
-
-  const handleCloseNavMenu = () => {
-    setAnchorElNav(null);
-  };
-
   const handleCloseUserMenu = () => {
     setAnchorElUser(null);
   };
 
-  const handleItemMenuClick = () => {
-    alert("asd");
-    handleCloseUserMenu();
+  // CONTROLAR As CAIXAs DE DIALOGO
+  const handleCloseDialog = () => {
+    setOpenDeleteDialog(false);
+    setOpenEditDialog(false);
   };
 
-  // colors menu
+  // CONTROLAR OS SNACK'S
+  const handleClose = (
+    event?: React.SyntheticEvent | Event,
+    reason?: string
+  ) => {
+    if (reason === "clickaway") {
+      return;
+    }
+    setOpenSnackSalvar(false);
+    setOpenSnackEditar(false);
+    setOpenSnackEditarErro(false);
+    setOpenSnackExcluir(false);
+  };
+
+  // DELETAR NOTA
+  const handleDelete = () => {
+    dataUser.notes.splice(selectedNote, 1);
+    localStorage.setItem(user, JSON.stringify(dataUser));
+    setDataUser(dataUser);
+    setOpenSnackExcluir(true);
+  };
+
+  // EDITAR NOTA
+  const handleEdit = () => {
+    resetFields();
+
+    if (newTitle.length > 0 || newBody.length > 0) {
+      dataUser.notes[selectedNote].noteTitle = newTitle;
+      dataUser.notes[selectedNote].noteBody = newBody;
+      localStorage.setItem(user, JSON.stringify(dataUser));
+      setDataUser(JSON.parse(localStorage.getItem(user)!));
+      setOpenSnackEditar(true);
+    } else {
+      setOpenSnackEditarErro(true);
+    }
+  };
+
+  // SALVAR NOTA
+  const saveNote = (noteTitle: string, noteBody: string, color: string) => {
+    resetFields();
+    dataUser.notes.push({
+      noteTitle: noteTitle,
+      noteBody: noteBody,
+      color: color,
+    });
+    localStorage.setItem(user, JSON.stringify(dataUser));
+    setDataUser(JSON.parse(localStorage.getItem(user)!));
+    handleCloseUserMenu();
+    setOpenSnackSalvar(true);
+  };
+
+  // MENU DE COLORS
   const [anchorElColor, setAnchorElColor] = React.useState<null | HTMLElement>(
     null
   );
@@ -81,6 +170,7 @@ const ResponsiveAppBar: React.FC = () => {
     setNoteColor(color);
   };
 
+  // USE EFFECT PARA MOSTRAR O BOTAO DE SALVAR DA NOTA
   useEffect(() => {
     if (noteTitle.length > 0 || noteBody.length > 0) {
       setSaveNoteHidden(false);
@@ -100,26 +190,9 @@ const ResponsiveAppBar: React.FC = () => {
               sx={{ display: "flex", mr: 1 }}
             />
 
-            <Box sx={{ flexGrow: 1, display: { xs: "flex", md: "none" } }}>
-              <Menu
-                id="menu-appbar"
-                anchorEl={anchorElNav}
-                anchorOrigin={{
-                  vertical: "bottom",
-                  horizontal: "left",
-                }}
-                keepMounted
-                transformOrigin={{
-                  vertical: "top",
-                  horizontal: "left",
-                }}
-                open={Boolean(anchorElNav)}
-                onClose={handleCloseNavMenu}
-                sx={{
-                  display: { xs: "block", md: "none" },
-                }}
-              ></Menu>
-            </Box>
+            <Box
+              sx={{ flexGrow: 1, display: { xs: "flex", md: "none" } }}
+            ></Box>
 
             <Box
               sx={{ flexGrow: 1, display: { xs: "none", md: "flex" } }}
@@ -128,7 +201,7 @@ const ResponsiveAppBar: React.FC = () => {
             <Box sx={{ flexGrow: 0 }}>
               <Tooltip title="Open settings">
                 <IconButton onClick={handleOpenUserMenu} sx={{ p: 0 }}>
-                  <Avatar alt="Remy Sharp" src="/static/images/avatar/2.jpg" />
+                  <Avatar />
                 </IconButton>
               </Tooltip>
               <Menu
@@ -147,11 +220,9 @@ const ResponsiveAppBar: React.FC = () => {
                 open={Boolean(anchorElUser)}
                 onClose={handleCloseUserMenu}
               >
-                {settings.map((setting) => (
-                  <MenuItem key={setting} onClick={handleItemMenuClick}>
-                    <Typography textAlign="center">{setting}</Typography>
-                  </MenuItem>
-                ))}
+                <MenuItem key="logout" onClick={handleLogout}>
+                  <Typography textAlign="center">Logout</Typography>
+                </MenuItem>
               </Menu>
             </Box>
           </Toolbar>
@@ -272,18 +343,23 @@ const ResponsiveAppBar: React.FC = () => {
                     display: saveNoteHidden === true ? "none" : "flex",
                   }}
                 >
-                  <Button onClick={hideDetails} variant="text">
+                  <Button
+                    onClick={() => {
+                      saveNote(noteTitle, noteBody, noteColor);
+                    }}
+                    variant="text"
+                  >
                     SALVAR
                   </Button>
                 </Box>
-                <Button onClick={hideDetails} variant="text">
+                <Button onClick={resetFields} variant="text">
                   FECHAR
                 </Button>
               </Box>
             </Box>
           </Box>
         </Grid>
-        {/* conteudo */}
+
         <Grid
           item
           xs={12}
@@ -293,41 +369,141 @@ const ResponsiveAppBar: React.FC = () => {
         >
           <Container maxWidth="lg">
             <Grid container>
-              <Grid item xs={12} sm={6} md={3}>
-                <Note
-                  color={noteColor}
-                  noteTitle={titulo}
-                  noteBody={corpo}
-                  colors={colors}
-                />
-              </Grid>
-              <Grid item xs={12} sm={6} md={3}>
-                <Note
-                  color={noteColor}
-                  noteTitle={titulo}
-                  noteBody={corpo}
-                  colors={colors}
-                />
-              </Grid>
-              <Grid item xs={12} sm={6} md={3}>
-                <Note
-                  color={noteColor}
-                  noteTitle={titulo}
-                  noteBody={corpo}
-                  colors={colors}
-                />
-              </Grid>
-              <Grid item xs={12} sm={6} md={3}>
-                <Note
-                  color={noteColor}
-                  noteTitle={titulo}
-                  noteBody={corpo}
-                  colors={colors}
-                />
-              </Grid>
+              {dataUser.notes.map((notes: NoteType, index: number) => (
+                <Grid item xs={12} sm={6} md={3} key={index}>
+                  <Note
+                    color={notes.color}
+                    noteTitle={notes.noteTitle}
+                    noteBody={notes.noteBody}
+                    colors={colors}
+                    index={index}
+                    editFunc={() => {
+                      setOpenEditDialog(true);
+                      setNewTitle(dataUser.notes[selectedNote].noteTitle);
+                      setNewBody(dataUser.notes[selectedNote].noteBody);
+                    }}
+                    deleteFunc={() => {
+                      setOpenDeleteDialog(true);
+                    }}
+                    selectFunc={() => {
+                      setSelectedNote(index);
+                    }}
+                  />
+                </Grid>
+              ))}
             </Grid>
           </Container>
         </Grid>
+      </Grid>
+      <Grid>
+        <Dialog open={openDeleteDialog} onClose={handleCloseDialog}>
+          <DialogTitle id="alert-dialog-title">
+            {"Deseja excluir a nota?"}
+          </DialogTitle>
+          <DialogActions>
+            <Button onClick={handleCloseDialog}>Cancelar</Button>
+            <Button
+              onClick={() => {
+                handleCloseDialog();
+                handleDelete();
+              }}
+              autoFocus
+            >
+              Confirmar
+            </Button>
+          </DialogActions>
+        </Dialog>
+      </Grid>
+      <Grid>
+        <Dialog open={openEditDialog} onClose={handleCloseDialog}>
+          <DialogContent>
+            <TextField
+              autoFocus
+              margin="dense"
+              id="name"
+              label="Titulo"
+              value={newTitle}
+              onChange={(ev) => setNewTitle(ev.target.value)}
+              type="text"
+              fullWidth
+              variant="standard"
+            />
+            <TextField
+              margin="dense"
+              id="name"
+              label="Descricao"
+              value={newBody}
+              onChange={(ev) => setNewBody(ev.target.value)}
+              type="text"
+              fullWidth
+              variant="standard"
+            />
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={handleCloseDialog}>Cancelar</Button>
+            <Button
+              onClick={() => {
+                handleCloseDialog();
+                handleEdit();
+              }}
+              autoFocus
+            >
+              Confirmar
+            </Button>
+          </DialogActions>
+        </Dialog>
+      </Grid>
+      <Grid>
+        <Snackbar
+          open={openSnackSalvar}
+          autoHideDuration={3000}
+          onClose={handleClose}
+        >
+          <Alert
+            onClose={handleClose}
+            severity="success"
+            sx={{ width: "100%" }}
+          >
+            Nota adicionada com sucesso!
+          </Alert>
+        </Snackbar>
+      </Grid>
+      <Grid>
+        <Snackbar
+          open={openSnackEditar}
+          autoHideDuration={3000}
+          onClose={handleClose}
+        >
+          <Alert onClose={handleClose} severity="info" sx={{ width: "100%" }}>
+            Nota atualizada!
+          </Alert>
+        </Snackbar>
+      </Grid>
+      <Grid>
+        <Snackbar
+          open={openSnackExcluir}
+          autoHideDuration={3000}
+          onClose={handleClose}
+        >
+          <Alert
+            onClose={handleClose}
+            severity="warning"
+            sx={{ width: "100%" }}
+          >
+            Nota excluida!
+          </Alert>
+        </Snackbar>
+      </Grid>
+      <Grid>
+        <Snackbar
+          open={openSnackEditarErro}
+          autoHideDuration={3000}
+          onClose={handleClose}
+        >
+          <Alert onClose={handleClose} severity="error" sx={{ width: "100%" }}>
+            Preencha ao menos um dos campos!
+          </Alert>
+        </Snackbar>
       </Grid>
     </>
   );

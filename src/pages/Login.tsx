@@ -1,43 +1,74 @@
 import {
   Avatar,
   Box,
-  Checkbox,
-  FormControlLabel,
-  FormGroup,
   Grid,
   Paper,
   TextField,
   Button,
+  Snackbar,
+  Alert,
 } from "@mui/material";
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import RoundButtonStyled from "../components/RoundButton/RoundButtonStyled";
 import iconLogo from "../images/logo-nobg.png";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
+import { useAppDispatch, useAppSelector } from "../store/hooks";
+import { login } from "../store/modules/LoginSlice";
 
 const Login: React.FC = () => {
   const navigate = useNavigate();
+  const dispach = useAppDispatch();
+  const loginLocal = JSON.parse(localStorage.getItem("logged")!);
+  const userInfo = useAppSelector((state) => state.login);
 
-  const navigateToHome = () => {
-    // navigate("/");
-    document.location.reload();
+  const [user, setUser] = useState<string>("");
+  const [password, setPassword] = useState<string>("");
+  const [isButtonDisabled, setIsButtonDisabled] = useState<boolean>(true);
+  const [openSnack, setOpenSnack] = React.useState(false);
+
+  useEffect(() => {
+    // CHECAR SE EXISTE USUARIO LOGADO
+    if (loginLocal != null) {
+      navigate("/");
+    }
+  });
+
+  const handleLogin = () => {
+    const checkUser = localStorage.getItem(user);
+    if (checkUser === null) {
+      setOpenSnack(true);
+    } else {
+      dispach(login({ user, password }));
+      if (userInfo.user === "") {
+        setOpenSnack(true);
+      } else {
+        navigate("/");
+      }
+    }
+  };
+
+  const handleClose = (
+    event?: React.SyntheticEvent | Event,
+    reason?: string
+  ) => {
+    if (reason === "clickaway") {
+      return;
+    }
+    setOpenSnack(false);
   };
 
   const signUp = () => {
     navigate("/signup");
   };
 
-  const [isButtonDisabled, setIsButtonDisabled] = useState<boolean>(true);
-  const [email, setEmail] = useState<string>("");
-  const [password, setPassword] = useState<string>("");
-
   useEffect(() => {
-    if (email.length > 0 && password.length > 0) {
+    if (user.length > 0 && password.length > 0) {
       setIsButtonDisabled(false);
     } else {
       setIsButtonDisabled(true);
     }
-  }, [email, password]);
+  }, [user, password]);
 
   return (
     <>
@@ -49,7 +80,6 @@ const Login: React.FC = () => {
               my: 4,
               display: "flex",
               flexDirection: "column",
-              // alignItems: "center",
             }}
           >
             <Box
@@ -68,17 +98,17 @@ const Login: React.FC = () => {
             <TextField
               autoFocus
               margin="normal"
-              type={"email"}
-              id="email"
-              label="E-mail"
+              type="text"
+              id="user"
+              label="User"
               variant="outlined"
-              value={email}
-              onChange={(ev: any) => setEmail(ev.target.value)}
+              value={user}
+              onChange={(ev: any) => setUser(ev.target.value)}
               fullWidth
             />
             <TextField
               margin="normal"
-              type={"password"}
+              type="password"
               id="password"
               label="Password"
               variant="outlined"
@@ -86,9 +116,6 @@ const Login: React.FC = () => {
               onChange={(ev: any) => setPassword(ev.target.value)}
               fullWidth
             />
-            <FormGroup>
-              <FormControlLabel control={<Checkbox />} label="Manter logado" />
-            </FormGroup>
             <Box
               sx={{
                 width: "100%",
@@ -101,7 +128,7 @@ const Login: React.FC = () => {
                 bgcolor={
                   isButtonDisabled === true ? "transparent" : "#5e17ebff"
                 }
-                onClick={navigateToHome}
+                onClick={handleLogin}
                 disabled={isButtonDisabled}
               >
                 <ArrowForwardIcon />
@@ -130,6 +157,17 @@ const Login: React.FC = () => {
             backgroundPosition: "center",
           }}
         ></Grid>
+      </Grid>
+      <Grid>
+        <Snackbar
+          open={openSnack}
+          autoHideDuration={3000}
+          onClose={handleClose}
+        >
+          <Alert onClose={handleClose} severity="error" sx={{ width: "100%" }}>
+            Verifique seu usuário e senha!
+          </Alert>
+        </Snackbar>
       </Grid>
     </>
   );

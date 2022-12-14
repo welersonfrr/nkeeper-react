@@ -1,34 +1,69 @@
-import { Avatar, Box, Grid, Paper, TextField, Button } from "@mui/material";
+import {
+  Avatar,
+  Box,
+  Grid,
+  Paper,
+  TextField,
+  Button,
+  Snackbar,
+  Alert,
+} from "@mui/material";
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import RoundButtonStyled from "../components/RoundButton/RoundButtonStyled";
 import iconLogo from "../images/logo-nobg.png";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
+import { useAppDispatch } from "../store/hooks";
+import { createUser } from "../store/modules/SignupSlice";
 
 const Signup: React.FC = () => {
   const navigate = useNavigate();
+  const dispach = useAppDispatch();
 
-  const navigateToHome = () => {
-    // navigate("/");
-    document.location.reload();
+  const [isButtonDisabled, setIsButtonDisabled] = useState<boolean>(true);
+  const [user, setUser] = useState<string>("");
+  const [password, setPassword] = useState<string>("");
+  const [repassword, setRePassword] = useState<string>("");
+  const [openSnack, setOpenSnack] = React.useState(false);
+
+  const clearFields = () => {
+    setUser("");
+    setPassword("");
+    setRePassword("");
+  };
+
+  const handleSignup = () => {
+    const newUser = localStorage.getItem(user);
+    if (newUser != null) {
+      setOpenSnack(true);
+      clearFields();
+    } else {
+      dispach(createUser({ user, password }));
+      navigate("/login");
+    }
+  };
+
+  const handleClose = (
+    event?: React.SyntheticEvent | Event,
+    reason?: string
+  ) => {
+    if (reason === "clickaway") {
+      return;
+    }
+    setOpenSnack(false);
   };
 
   const signIn = () => {
     navigate("/login");
   };
 
-  const [isButtonDisabled, setIsButtonDisabled] = useState<boolean>(true);
-  const [email, setEmail] = useState<string>("");
-  const [password, setPassword] = useState<string>("");
-  const [repassword, setRePassword] = useState<string>("");
-
   useEffect(() => {
-    if (email.length > 0 && password.length > 4 && password === repassword) {
+    if (user.length > 0 && password.length > 4 && password === repassword) {
       setIsButtonDisabled(false);
     } else {
       setIsButtonDisabled(true);
     }
-  }, [email, password, repassword]);
+  }, [user, password, repassword]);
 
   return (
     <>
@@ -40,7 +75,6 @@ const Signup: React.FC = () => {
               my: 4,
               display: "flex",
               flexDirection: "column",
-              // alignItems: "center",
             }}
           >
             <Box
@@ -59,17 +93,17 @@ const Signup: React.FC = () => {
             <TextField
               autoFocus
               margin="normal"
-              type={"email"}
-              id="email"
-              label="E-mail"
+              type="text"
+              id="user"
+              label="User"
               variant="outlined"
-              value={email}
-              onChange={(ev: any) => setEmail(ev.target.value)}
+              value={user}
+              onChange={(ev: any) => setUser(ev.target.value)}
               fullWidth
             />
             <TextField
               margin="normal"
-              type={"password"}
+              type="password"
               id="password"
               label="Password"
               variant="outlined"
@@ -79,7 +113,7 @@ const Signup: React.FC = () => {
             />
             <TextField
               margin="normal"
-              type={"password"}
+              type="password"
               id="repassword"
               label="Repeat Password"
               variant="outlined"
@@ -99,7 +133,7 @@ const Signup: React.FC = () => {
                 bgcolor={
                   isButtonDisabled === true ? "transparent" : "#5e17ebff"
                 }
-                onClick={navigateToHome}
+                onClick={handleSignup}
                 disabled={isButtonDisabled}
               >
                 <ArrowForwardIcon />
@@ -128,6 +162,21 @@ const Signup: React.FC = () => {
             backgroundPosition: "center",
           }}
         ></Grid>
+      </Grid>
+      <Grid>
+        <Snackbar
+          open={openSnack}
+          autoHideDuration={3000}
+          onClose={handleClose}
+        >
+          <Alert
+            onClose={handleClose}
+            severity="warning"
+            sx={{ width: "100%" }}
+          >
+            Já existe conta com este usuário!
+          </Alert>
+        </Snackbar>
       </Grid>
     </>
   );
