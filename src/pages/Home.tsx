@@ -33,7 +33,9 @@ import NoteType from "../Types/NoteType";
 const ResponsiveAppBar: React.FC = () => {
   const navigate = useNavigate();
   const dispach = useAppDispatch();
-  const loginLocal = JSON.parse(localStorage.getItem("logged")!);
+  const loginLocal = JSON.parse(localStorage.getItem("logged")!) || {
+    user: null,
+  };
   const user = loginLocal.user;
   const colors = ["#fff", "#e91e63", "#4caf50", "#2196f3"];
 
@@ -49,16 +51,18 @@ const ResponsiveAppBar: React.FC = () => {
   const [newBody, setNewBody] = useState<string>("");
   const [dataUser, setDataUser] = useState<any>(
     JSON.parse(localStorage.getItem(user)!)
-  );
+  ) || { notes: [] };
   const [openSnackSalvar, setOpenSnackSalvar] = React.useState(false);
   const [openSnackEditar, setOpenSnackEditar] = React.useState(false);
   const [openSnackEditarErro, setOpenSnackEditarErro] = React.useState(false);
   const [openSnackExcluir, setOpenSnackExcluir] = React.useState(false);
 
-  // CHECAR SE EXISTE USUARIO LOGADO
-  if (loginLocal === null) {
-    navigate("/login");
-  }
+  useEffect(() => {
+    // CHECAR SE EXISTE USUARIO LOGADO
+    if (user === null) {
+      navigate("/login");
+    }
+  }, []);
 
   // CONTROLE DO LOGOUT
   const handleLogout = () => {
@@ -201,7 +205,11 @@ const ResponsiveAppBar: React.FC = () => {
             <Box sx={{ flexGrow: 0 }}>
               <Tooltip title="Open settings">
                 <IconButton onClick={handleOpenUserMenu} sx={{ p: 0 }}>
-                  <Avatar />
+                  <Avatar
+                    src={`https://avatars.dicebear.com/api/identicon/${user}.svg`}
+                    alt={user}
+                    sx={{ bgcolor: "#fff", padding: "8px" }}
+                  />
                 </IconButton>
               </Tooltip>
               <Menu
@@ -369,28 +377,30 @@ const ResponsiveAppBar: React.FC = () => {
         >
           <Container maxWidth="lg">
             <Grid container>
-              {dataUser.notes.map((notes: NoteType, index: number) => (
-                <Grid item xs={12} sm={6} md={3} key={index}>
-                  <Note
-                    color={notes.color}
-                    noteTitle={notes.noteTitle}
-                    noteBody={notes.noteBody}
-                    colors={colors}
-                    index={index}
-                    editFunc={() => {
-                      setOpenEditDialog(true);
-                      setNewTitle(dataUser.notes[selectedNote].noteTitle);
-                      setNewBody(dataUser.notes[selectedNote].noteBody);
-                    }}
-                    deleteFunc={() => {
-                      setOpenDeleteDialog(true);
-                    }}
-                    selectFunc={() => {
-                      setSelectedNote(index);
-                    }}
-                  />
-                </Grid>
-              ))}
+              {dataUser != null
+                ? dataUser.notes.map((notes: NoteType, index: number) => (
+                    <Grid item xs={12} sm={6} md={3} key={index}>
+                      <Note
+                        color={notes.color}
+                        noteTitle={notes.noteTitle}
+                        noteBody={notes.noteBody}
+                        colors={colors}
+                        index={index}
+                        editFunc={() => {
+                          setOpenEditDialog(true);
+                          setNewTitle(dataUser.notes[selectedNote].noteTitle);
+                          setNewBody(dataUser.notes[selectedNote].noteBody);
+                        }}
+                        deleteFunc={() => {
+                          setOpenDeleteDialog(true);
+                        }}
+                        selectFunc={() => {
+                          setSelectedNote(index);
+                        }}
+                      />
+                    </Grid>
+                  ))
+                : ""}
             </Grid>
           </Container>
         </Grid>
