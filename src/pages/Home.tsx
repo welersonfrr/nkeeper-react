@@ -81,7 +81,7 @@ const ResponsiveAppBar: React.FC = () => {
     setNoteColor("#fff");
   };
 
-  // FUNCOES PARA MOSTRAR OS BOTOTES DE AÇAO DA NOTA
+  // FUNCOES PARA MOSTRAR OS BOTOES DE AÇAO DA NOTA
   const showNoteDetails = (noteDetail: string) => {
     setNoteDetailsHidden(false);
     setNoteBody(noteDetail);

@@ -18,10 +18,10 @@ interface NoteProps {
   noteBody: string;
   color: string;
   colors: any;
-  index: any;
-  deleteFunc: any;
-  editFunc: any;
-  selectFunc: any;
+  index: number;
+  deleteFunc: VoidFunction;
+  editFunc: VoidFunction;
+  selectFunc: VoidFunction;
 }
 
 const Note: React.FC<NoteProps> = ({
@@ -69,6 +69,7 @@ const Note: React.FC<NoteProps> = ({
     dataUser.notes[index].color = color;
     localStorage.setItem(dataUser.user, JSON.stringify(dataUser));
     setDataUser(dataUser);
+    setNoteColor(color);
   };
 
   return (
